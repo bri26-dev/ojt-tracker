@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@import "react-calendar/dist/Calendar.css";
+
+/* Dark mode override */
+.react-calendar {
+  background-color: #111827;
+  border: none;
+  color: white;
+  border-radius: 16px;
+  padding: 10px;
+}
+
+.react-calendar__tile {
+  background: transparent;
+  color: white;
+}
+
+.react-calendar__tile--active {
+  background: #3b82f6 !important;
+}
+
+.react-calendar__tile--now {
+  background: #1f2937 !important;
+}
+
+.logged-day {
+  background: #3b82f6 !important;
+  color: white !important;
+  border-radius: 20% !important;
+}

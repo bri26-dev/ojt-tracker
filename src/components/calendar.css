@@ -1,0 +1,72 @@
+.react-calendar {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  width: 100%;
+}
+
+.react-calendar__navigation {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.react-calendar__navigation button {
+  background: none;
+  color: #e5e5e5;
+  font-weight: 600;
+  min-width: 44px;
+  font-size: 1rem;
+}
+
+.react-calendar__navigation button:hover {
+  background: #1f2937;
+  border-radius: 8px;
+}
+
+.react-calendar__month-view__weekdays {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.react-calendar__tile {
+  background: transparent;
+  color: white;
+  border-radius: 10px;
+  padding: 12px 0;
+  transition: all 0.2s ease;
+}
+
+.react-calendar__tile:hover {
+  background: #1f2937;
+}
+
+.react-calendar__tile--now {
+  background: #111827;
+  border: 1px solid #374151;
+}
+
+.react-calendar__tile--active {
+  background: #3b82f6 !important;
+  color: white;
+}
+
+/* Logged Day (Google-style filled highlight) */
+.logged-day {
+  background: #2563eb !important;
+  color: white !important;
+  font-weight: 600;
+  position: relative;
+}
+
+.logged-day::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: #60a5fa;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+}
