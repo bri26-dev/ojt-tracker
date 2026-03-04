@@ -1,270 +1,202 @@
-import { useState } from "react";
-import { FiX, FiEdit3, FiSave, FiTrash2 } from "react-icons/fi";
+function JournalList({ entries, onOpenEntry }) {
 
-function JournalList({ entries, setEntries }) {
-  const [selectedEntry, setSelectedEntry] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({});
+  /* Calculate Hours (for summary) */
+  const calculateHours = (entry) => {
+    if (!entry.timeIn || !entry.timeOut) return 0;
 
-  const calculateHours = (timeIn, timeOut) => {
-    if (!timeIn || !timeOut) return 0;
+    const [inH, inM] = entry.timeIn.split(":").map(Number);
+    const [outH, outM] = entry.timeOut.split(":").map(Number);
 
-    const start = new Date(`1970-01-01T${timeIn}:00`);
-    const end = new Date(`1970-01-01T${timeOut}:00`);
+    const start = new Date();
+    start.setHours(inH, inM, 0);
 
-    let diff = (end - start) / (1000 * 60 * 60);
+    const end = new Date();
+    end.setHours(outH, outM, 0);
 
-    if (diff <= 0) return 0;
+    let hours = (end - start) / (1000 * 60 * 60);
 
-    // Lunch break: 12:00–13:00
-    const lunchStart = new Date("1970-01-01T12:00:00");
-    const lunchEnd = new Date("1970-01-01T13:00:00");
+    /* Lunch Break (12–1 PM) */
+    const lunchStart = new Date();
+    lunchStart.setHours(12, 0, 0);
 
-    // Check overlap with lunch
+    const lunchEnd = new Date();
+    lunchEnd.setHours(13, 0, 0);
+
     if (start < lunchEnd && end > lunchStart) {
-      diff -= 1;
+      hours -= 1;
     }
 
-    // Max 8 hrs per day
-    return Math.min(diff, 8);
+    return Math.max(hours, 0);
   };
 
-  const formatTime = (time) => {
-    if (!time) return "";
-    let [h, m] = time.split(":").map(Number);
+  /* Sort Desc */
+  const sorted = [...entries].sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
 
-    const ampm = h >= 12 ? "PM" : "AM";
-    h = h % 12 || 12;
+  /* Group By Month */
+  const grouped = {};
 
-    return `${h}:${m.toString().padStart(2, "0")} ${ampm}`;
-  };
+  sorted.forEach((entry) => {
+    const date = new Date(entry.date);
 
-  const sortedEntries = [...entries].reverse();
+    const monthKey = date.toLocaleString("default", {
+      month: "long",
+      year: "numeric",
+    });
 
-  const handleDelete = (id) => {
-    const updated = entries.filter((e) => e.id !== id);
+    if (!grouped[monthKey]) {
+      grouped[monthKey] = [];
+    }
 
-    setEntries(updated);
-    setSelectedEntry(null);
-    setIsEditing(false);
-  };
+    grouped[monthKey].push(entry);
+  });
 
-  const handleEdit = (entry) => {
-    setIsEditing(true);
-    setEditData({ ...entry });
-  };
+  /* Summary */
+  const totalEntries = entries.length;
 
-  const handleSave = () => {
-    const updatedEntry = {
-      ...editData,
-      hours: calculateHours(editData.timeIn, editData.timeOut),
-    };
+  const completedDays = entries.filter(
+    (e) => e.timeOut
+  ).length;
 
-    const updated = entries.map((e) =>
-      e.id === updatedEntry.id ? updatedEntry : e
-    );
+  const totalHours = entries.reduce(
+    (s, e) => s + calculateHours(e),
+    0
+  );
 
-    setEntries(updated);
-    setSelectedEntry(updatedEntry);
-    setIsEditing(false);
-  };
-
-  if (entries.length === 0) {
+  if (!entries.length) {
     return (
-      <div className="bg-neutral-900 p-6 rounded-xl text-center text-gray-400">
-        No journal entries yet.
+      <div className="text-gray-400 text-center mt-10">
+        No entries yet.
       </div>
     );
   }
 
   return (
-    <>
-      <div className="bg-neutral-900 p-6 rounded-xl">
-        <h3 className="text-xl font-semibold mb-4">Entries</h3>
+    <div className="space-y-6">
 
-        <div className="space-y-3">
+      {/* SUMMARY CARDS */}
+      <div className="grid grid-cols-3 gap-3">
 
-          {sortedEntries.map((entry) => (
-            <div
-              key={entry.id}
-              onClick={() => {
-                setSelectedEntry(entry);
-                setIsEditing(false);
-              }}
-              className="border border-neutral-800 p-4 rounded-xl cursor-pointer hover:bg-neutral-800 flex justify-between"
-            >
-              <div>
-                <p className="font-semibold">{entry.date}</p>
-                <p className="text-sm text-gray-400">
-                  {formatTime(entry.timeIn)} – {formatTime(entry.timeOut)}
-                </p>
-              </div>
+        <SummaryCard
+          label="Entries"
+          value={totalEntries}
+        />
 
-              <p className="text-blue-400">
-                {entry.hours.toFixed(2)}h
-              </p>
-            </div>
-          ))}
+        <SummaryCard
+          label="Completed"
+          value={completedDays}
+        />
 
-        </div>
+        <SummaryCard
+          label="Total Hours"
+          value={`${totalHours.toFixed(1)}h`}
+        />
+
       </div>
 
-      {selectedEntry && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      {/* GROUPED LIST */}
+      <div className="space-y-8">
 
-          <div className="bg-neutral-900 p-6 rounded-2xl w-[90%] max-w-md relative">
+        {Object.entries(grouped).map(
+          ([month, list]) => (
+            <div key={month} className="space-y-3">
 
-            <button
-              onClick={() => setSelectedEntry(null)}
-              className="absolute top-4 right-4"
-            >
-              <FiX size={22} />
-            </button>
+              {/* Month Header */}
+              <h3 className="text-lg font-semibold text-gray-300">
+                {month}
+              </h3>
 
-            <h3 className="text-xl font-semibold mb-4">
-              Entry Details
-            </h3>
+              {/* Entries */}
+              {list.map((entry) => (
+                <div
+                  key={entry.id}
+                  onClick={() => onOpenEntry(entry)}
+                  className="
+                    bg-neutral-900
+                    border border-neutral-800
+                    p-4
+                    rounded-xl
+                    cursor-pointer
+                    hover:bg-neutral-800
+                    transition
+                    flex justify-between items-center
+                  "
+                >
+                  {/* Left */}
+                  <div>
+                    <p className="font-medium">
+                      {new Date(entry.date).toLocaleDateString(
+                        "default",
+                        { month: "short", day: "numeric" }
+                      )}
+                    </p>
 
-            {!isEditing ? (
-              <>
-                <Detail label="Date" value={selectedEntry.date} />
-                <Detail
-                  label="Time"
-                  value={`${formatTime(selectedEntry.timeIn)} – ${formatTime(
-                    selectedEntry.timeOut
-                  )}`}
-                />
-                <Detail
-                  label="Description"
-                  value={selectedEntry.description || "—"}
-                />
-                <Detail
-                  label="Notes"
-                  value={selectedEntry.notes || "—"}
-                />
+                    <p className="text-sm text-gray-400">
+                      {formatTo12Hour(entry.timeIn)} –{" "}
+                      {entry.timeOut
+                        ? formatTo12Hour(entry.timeOut)
+                        : "Ongoing"}
+                    </p>
+                  </div>
 
-                <div className="flex gap-3 mt-6">
-                  <ActionButton color="blue" onClick={() => handleEdit(selectedEntry)}>
-                    <FiEdit3 /> Edit
-                  </ActionButton>
-
-                  <ActionButton color="red" onClick={() => handleDelete(selectedEntry.id)}>
-                    <FiTrash2 /> Delete
-                  </ActionButton>
+                  {/* Status */}
+                  <StatusBadge entry={entry} />
                 </div>
-              </>
-            ) : (
-              <>
-                <Input
-                  label="Date"
-                  type="date"
-                  value={editData.date}
-                  onChange={(e) =>
-                    setEditData({ ...editData, date: e.target.value })
-                  }
-                />
+              ))}
 
-                <Input
-                  label="Time In"
-                  type="time"
-                  value={editData.timeIn}
-                  onChange={(e) =>
-                    setEditData({ ...editData, timeIn: e.target.value })
-                  }
-                />
+            </div>
+          )
+        )}
 
-                <Input
-                  label="Time Out"
-                  type="time"
-                  value={editData.timeOut}
-                  onChange={(e) =>
-                    setEditData({ ...editData, timeOut: e.target.value })
-                  }
-                />
-
-                <Input
-                  label="Description"
-                  value={editData.description}
-                  onChange={(e) =>
-                    setEditData({ ...editData, description: e.target.value })
-                  }
-                />
-
-                <Textarea
-                  label="Notes"
-                  value={editData.notes}
-                  onChange={(e) =>
-                    setEditData({ ...editData, notes: e.target.value })
-                  }
-                />
-
-                <div className="flex gap-3 mt-6">
-                  <ActionButton color="green" onClick={handleSave}>
-                    <FiSave /> Save
-                  </ActionButton>
-
-                  <ActionButton color="gray" onClick={() => setIsEditing(false)}>
-                    Cancel
-                  </ActionButton>
-                </div>
-              </>
-            )}
-
-          </div>
-        </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }
 
-/* UI */
+/* Components */
 
-const Detail = ({ label, value }) => (
-  <div className="mb-3">
-    <p className="text-sm text-gray-400">{label}</p>
-    <div className="bg-neutral-800 rounded-lg p-2">
+const SummaryCard = ({ label, value }) => (
+  <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-xl text-center">
+
+    <p className="text-xs text-gray-400">
+      {label}
+    </p>
+
+    <p className="text-xl font-bold mt-1">
       {value}
-    </div>
+    </p>
+
   </div>
 );
 
-const Input = ({ label, ...props }) => (
-  <div className="mb-3">
-    <p className="text-sm text-gray-400">{label}</p>
-    <input
-      {...props}
-      className="w-full bg-neutral-800 rounded-lg p-2"
-    />
-  </div>
-);
+const StatusBadge = ({ entry }) => {
 
-const Textarea = ({ label, ...props }) => (
-  <div className="mb-3">
-    <p className="text-sm text-gray-400">{label}</p>
-    <textarea
-      {...props}
-      rows={3}
-      className="w-full bg-neutral-800 rounded-lg p-2 resize-none"
-    />
-  </div>
-);
-
-const ActionButton = ({ children, color, ...props }) => {
-  const colors = {
-    blue: "bg-blue-500",
-    red: "bg-red-500",
-    green: "bg-green-500",
-    gray: "bg-neutral-700",
-  };
+  if (!entry.timeOut) {
+    return (
+      <span className="text-yellow-400 text-sm font-medium">
+        Active
+      </span>
+    );
+  }
 
   return (
-    <button
-      {...props}
-      className={`flex-1 py-2 rounded-xl text-white flex justify-center items-center gap-2 ${colors[color]}`}
-    >
-      {children}
-    </button>
+    <span className="text-green-400 text-sm font-medium">
+      Completed
+    </span>
   );
+};
+
+const formatTo12Hour = (time) => {
+  if (!time) return "";
+
+  const [hour, minute] = time.split(":").map(Number);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 || 12;
+
+  return `${formattedHour}:${minute
+    .toString()
+    .padStart(2, "0")} ${ampm}`;
 };
 
 export default JournalList;

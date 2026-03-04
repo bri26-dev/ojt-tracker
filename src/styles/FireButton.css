@@ -1,0 +1,47 @@
+/* === Floating Pulse === */
+@keyframes floatFire {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+/* === Outer Glow Pulse === */
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 8px #3b82f6; }
+  50% { box-shadow: 0 0 20px #60a5fa; }
+  100% { box-shadow: 0 0 8px #3b82f6; }
+}
+
+/* === Fire Aura Ring === */
+@keyframes fireRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Button Base */
+.fire-btn {
+  position: relative;
+  animation: floatFire 3s ease-in-out infinite,
+             glowPulse 2s ease-in-out infinite;
+}
+
+/* Expanding aura ring */
+.fire-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(96,165,250,0.4) 0%, transparent 70%);
+  animation: fireRing 2s infinite;
+  z-index: -1;
+}
+
+/* Press effect */
+.fire-btn:active {
+  transform: scale(0.9);
+}

@@ -3,8 +3,10 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import Journal from "./components/Journal";
 import CalendarTracker from "./components/CalendarTracker";
+import { calculateHours } from "./utils/calculateHours";
 
 function App() {
+
   const [entries, setEntries] = useState(() => {
     const saved = localStorage.getItem("ojtEntries");
     return saved ? JSON.parse(saved) : [];
@@ -13,17 +15,14 @@ function App() {
   const [activePage, setActivePage] = useState("dashboard");
 
   useEffect(() => {
-    const savedEntries = localStorage.getItem("ojtEntries");
-    if (savedEntries) {
-      setEntries(JSON.parse(savedEntries));
-    }
-  }, []);
-
-  useEffect(() => {
     localStorage.setItem("ojtEntries", JSON.stringify(entries));
   }, [entries]);
 
-  const totalHours = entries.reduce((sum, entry) => sum + entry.hours, 0);
+  const totalHours = entries.reduce(
+    (sum, entry) => sum + calculateHours(entry),
+    0
+  );
+
   const remainingHours = 500 - totalHours;
   const progressPercent = (totalHours / 500) * 100;
 
@@ -37,7 +36,7 @@ function App() {
             totalHours={totalHours}
             remainingHours={remainingHours}
             progressPercent={progressPercent}
-            setActivePage={setActivePage} 
+            setActivePage={setActivePage}
           />
         )}
 
@@ -51,7 +50,10 @@ function App() {
 
       </div>
 
-      <Sidebar activePage={activePage} setActivePage={setActivePage} />
+      <Sidebar
+        activePage={activePage}
+        setActivePage={setActivePage}
+      />
 
     </div>
   );
