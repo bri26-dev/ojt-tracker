@@ -3,6 +3,7 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import Journal from "./components/Journal";
 import CalendarTracker from "./components/CalendarTracker";
+import Toast from "./components/Toast";
 import { calculateHours } from "./utils/calculateHours";
 
 function App() {
@@ -13,6 +14,16 @@ function App() {
   });
 
   const [activePage, setActivePage] = useState("dashboard");
+
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
 
   useEffect(() => {
     localStorage.setItem("ojtEntries", JSON.stringify(entries));
@@ -29,6 +40,14 @@ function App() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
 
+      {/* TOAST */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+        />
+      )}
+
       <div className="flex-1 overflow-y-auto p-4 pb-24">
 
         {activePage === "dashboard" && (
@@ -41,7 +60,11 @@ function App() {
         )}
 
         {activePage === "journal" && (
-          <Journal entries={entries} setEntries={setEntries} />
+          <Journal
+            entries={entries}
+            setEntries={setEntries}
+            showToast={showToast}
+          />
         )}
 
         {activePage === "calendar" && (

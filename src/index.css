@@ -28,3 +28,35 @@
   color: white !important;
   border-radius: 20% !important;
 }
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastOut {
+  0% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.animate-toastIn {
+  animation: toastIn 0.25s ease-out;
+}
+
+.animate-toastOut {
+  animation: toastOut 3s ease forwards;
+}

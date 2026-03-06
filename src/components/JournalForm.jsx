@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-function JournalForm({ entries, setEntries, onClose }) {
+function JournalForm({ entries, setEntries, onClose, showToast }) {
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -16,9 +16,7 @@ function JournalForm({ entries, setEntries, onClose }) {
     );
 
     if (exists) {
-      alert(
-        "An entry for this date already exists."
-      );
+      showToast("Entry for this date already exists.", "error");
       return;
     }
 
@@ -36,12 +34,14 @@ function JournalForm({ entries, setEntries, onClose }) {
     };
 
     setEntries([...entries, newEntry]);
+
+    showToast("Journal entry created.", "success");
+
     onClose();
   };
 
   return (
 
-    /* Overlay */
     <div
       className="
         fixed inset-0
@@ -52,7 +52,6 @@ function JournalForm({ entries, setEntries, onClose }) {
       "
     >
 
-      {/* Modal Box */}
       <div
         className="
           bg-neutral-900
@@ -65,7 +64,6 @@ function JournalForm({ entries, setEntries, onClose }) {
         "
       >
 
-        {/* Header */}
         <div className="flex justify-between items-center">
 
           <h3 className="text-lg font-semibold">
@@ -81,7 +79,6 @@ function JournalForm({ entries, setEntries, onClose }) {
 
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <div>
@@ -110,7 +107,6 @@ function JournalForm({ entries, setEntries, onClose }) {
             />
           </div>
 
-          {/* Actions */}
           <div className="flex gap-3 pt-2">
 
             <button

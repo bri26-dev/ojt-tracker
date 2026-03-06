@@ -13,8 +13,12 @@ import {
 
 const MIN_TASKS = 3;
 
-function EntryPage({ entry, setEntries, goBack }) {
+function EntryPage({ entry, setEntries, goBack, showToast }) {
   const [isEditing, setIsEditing] = useState(false);
+
+  /* NEW STATES */
+  const [showTimeOutModal, setShowTimeOutModal] = useState(false);
+  const [timeOutValue, setTimeOutValue] = useState("17:00");
 
   const ensureMinimumTasks = (tasks = []) => {
     const safeTasks = [...tasks];
@@ -92,24 +96,49 @@ function EntryPage({ entry, setEntries, goBack }) {
         e.id === localEntry.id ? localEntry : e
       )
     );
+
+    showToast("Entry Saved.", "info");
+
     setIsEditing(false);
   };
 
   const handleCancel = () => {
-    setLocalEntry({
-      ...entry,
-      tasks: ensureMinimumTasks(entry.tasks),
-      notes: entry.notes || "",
-    });
+    setLocalEntry((prev) => ({
+      ...prev,
+      tasks: ensureMinimumTasks(prev.tasks),
+      notes: prev.notes || "",
+    }));
     setIsEditing(false);
   };
 
   const handleDelete = () => {
     if (!window.confirm("Delete this entry?")) return;
+
     setEntries((prev) =>
       prev.filter((e) => e.id !== localEntry.id)
     );
+
+    showToast("Entry Deleted.", "error");
+
     goBack();
+  };
+
+  /* NEW QUICK TIME OUT */
+    const handleQuickTimeOut = () => {
+    const updated = { ...localEntry, timeOut: timeOutValue };
+
+    setLocalEntry(updated);
+
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.id === updated.id ? updated : e
+      )
+    );
+
+    setShowTimeOutModal(false);
+
+    /* 🔥 ADD THIS */
+    showToast("Timed out successfully.", "success");
   };
 
   const status = localEntry.timeOut ? "Completed" : "Active";
@@ -236,6 +265,17 @@ function EntryPage({ entry, setEntries, goBack }) {
             </>
           )}
         </div>
+
+        {/* NEW TIME OUT BUTTON */}
+        {!localEntry.timeOut && !isEditing && (
+          <button
+            onClick={() => setShowTimeOutModal(true)}
+            className="w-full mt-3 bg-red-500 hover:bg-red-600 transition rounded-lg py-2 text-sm font-medium"
+          >
+            Time Out
+          </button>
+        )}
+
       </div>
 
       {/* ================= TASKS ================= */}
@@ -344,6 +384,47 @@ function EntryPage({ entry, setEntries, goBack }) {
           </p>
         )}
       </div>
+
+      {/* ================= TIME OUT MODAL ================= */}
+      {showTimeOutModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+
+          <div className="bg-neutral-900 rounded-xl p-5 w-[90%] max-w-sm space-y-4 border border-neutral-800">
+
+            <h3 className="text-lg font-semibold text-center">
+              Confirm Time Out
+            </h3>
+
+            <input
+              type="time"
+              value={timeOutValue}
+              onChange={(e) => setTimeOutValue(e.target.value)}
+              className="w-full bg-neutral-800 p-2 rounded-lg text-center"
+            />
+
+            <div className="flex gap-2">
+
+              <button
+                onClick={handleQuickTimeOut}
+                className="flex-1 bg-green-500 hover:bg-green-600 transition rounded-lg py-2 text-sm font-medium"
+              >
+                Confirm
+              </button>
+
+              <button
+                onClick={() => setShowTimeOutModal(false)}
+                className="flex-1 bg-neutral-700 hover:bg-neutral-600 transition rounded-lg py-2 text-sm font-medium"
+              >
+                Cancel
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
     </div>
   );
 }

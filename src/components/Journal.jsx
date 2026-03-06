@@ -5,7 +5,7 @@ import EntryPage from "./EntryPage";
 import { Plus } from "lucide-react";
 import "../styles/FireButton.css";
 
-function Journal({ entries, setEntries }) {
+function Journal({ entries, setEntries, showToast }) {
 
   const [activeEntry, setActiveEntry] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -15,6 +15,7 @@ function Journal({ entries, setEntries }) {
       <EntryPage
         entry={activeEntry}
         setEntries={setEntries}
+        showToast={showToast}
         goBack={() => setActiveEntry(null)}
       />
     );
@@ -37,7 +38,7 @@ function Journal({ entries, setEntries }) {
         onOpenEntry={(entry) => setActiveEntry(entry)}
       />
 
-      {/* 🔥 Fire Floating Add Button */}
+      {/* Floating Add Button */}
       <button
         onClick={() => setShowModal(true)}
         className="
@@ -65,6 +66,7 @@ function Journal({ entries, setEntries }) {
         <JournalForm
           entries={entries}
           setEntries={setEntries}
+          showToast={showToast}
           onClose={() => setShowModal(false)}
         />
       )}
