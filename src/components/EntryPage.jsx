@@ -220,51 +220,60 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          {isEditing ? (
-            <>
-              <input
-                type="time"
-                value={localEntry.timeIn || ""}
-                onChange={(e) =>
-                  setLocalEntry({ ...localEntry, timeIn: e.target.value })
-                }
-                className="bg-neutral-800 p-2 rounded-lg text-sm text-center"
-              />
+  {isEditing ? (
+    <>
+      {/* TIME IN */}
+      <div className="bg-neutral-800 rounded-lg p-2 text-center space-y-1">
+        <p className="text-[12px] text-gray-400">In</p>
+        <input
+          type="time"
+          value={localEntry.timeIn || ""}
+          onChange={(e) =>
+            setLocalEntry({ ...localEntry, timeIn: e.target.value })
+          }
+          className="bg-transparent text-sm text-center w-full outline-none"
+        />
+      </div>
 
-              <input
-                type="time"
-                value={localEntry.timeOut || ""}
-                onChange={(e) =>
-                  setLocalEntry({ ...localEntry, timeOut: e.target.value })
-                }
-                className="bg-neutral-800 p-2 rounded-lg text-sm text-center"
-              />
+      {/* TIME OUT */}
+      <div className="bg-neutral-800 rounded-lg p-2 text-center space-y-1">
+        <p className="text-[12px] text-gray-400">Out</p>
+        <input
+          type="time"
+          value={localEntry.timeOut || ""}
+          onChange={(e) =>
+            setLocalEntry({ ...localEntry, timeOut: e.target.value })
+          }
+          className="bg-transparent text-sm text-center w-full outline-none"
+        />
+      </div>
 
-              <InfoBox
-                label="Worked"
-                value={calculateHours()}
-                icon={<Clock size={12} />}
-              />
-            </>
-          ) : (
-            <>
-              <InfoBox label="In" value={formatTo12Hour(localEntry.timeIn)} />
-              <InfoBox
-                label="Out"
-                value={
-                  localEntry.timeOut
-                    ? formatTo12Hour(localEntry.timeOut)
-                    : "—"
-                }
-              />
-              <InfoBox
-                label="Worked"
-                value={calculateHours()}
-                icon={<Clock size={12} />}
-              />
-            </>
-          )}
-        </div>
+      {/* WORKED */}
+      <InfoBox
+        label="Worked"
+        value={calculateHours()}
+        icon={<Clock size={12} />}
+      />
+    </>
+  ) : (
+    <>
+      <InfoBox label="In" value={formatTo12Hour(localEntry.timeIn)} />
+      <InfoBox
+        label="Out"
+        value={
+          localEntry.timeOut
+            ? formatTo12Hour(localEntry.timeOut)
+            : "—"
+        }
+      />
+      <InfoBox
+        label="Worked"
+        value={calculateHours()}
+        icon={<Clock size={12} />}
+      />
+    </>
+  )}
+</div>
 
         {/* NEW TIME OUT BUTTON */}
         {!localEntry.timeOut && !isEditing && (
@@ -278,7 +287,7 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
 
       </div>
 
-      {/* ================= TASKS ================= */}
+      {/* ================= TASKS (GRID STYLE + HEADER) ================= */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <h3 className="text-base font-semibold">Tasks</h3>
@@ -288,102 +297,173 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
               onClick={addTask}
               className="flex items-center gap-1 text-blue-400 text-xs"
             >
-              <Plus size={14} /> Add
+              <Plus size={14} /> Add Row
             </button>
           )}
         </div>
 
-        {localEntry.tasks.map((task, i) => (
-          <div
-            key={i}
-            className="bg-neutral-900 border border-neutral-800 rounded-lg p-3 space-y-2 relative"
-          >
-            {isEditing && localEntry.tasks.length > MIN_TASKS && (
-              <button
-                onClick={() => removeTask(i)}
-                className="absolute top-2 right-2 text-red-400"
-              >
-                <Minus size={14} />
-              </button>
-            )}
+        {/* CARD */}
+        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3 space-y-1">
 
-            {isEditing ? (
-              <>
-                <input
-                  placeholder="Task name"
-                  value={task.task || ""}
-                  onChange={(e) =>
-                    handleTaskChange(i, "task", e.target.value)
-                  }
-                  className="w-full bg-neutral-800 p-2 rounded-lg text-sm"
-                />
+          {/* 🔷 HEADER ROW (ALIGNED WITH ROWS) */}
+<div className="flex items-center gap-2">
 
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="time"
-                    value={task.start || ""}
-                    onChange={(e) =>
-                      handleTaskChange(i, "start", e.target.value)
-                    }
-                    className="bg-neutral-800 p-2 rounded-lg text-sm"
-                  />
-                  <input
-                    type="time"
-                    value={task.end || ""}
-                    onChange={(e) =>
-                      handleTaskChange(i, "end", e.target.value)
-                    }
-                    className="bg-neutral-800 p-2 rounded-lg text-sm"
-                  />
+  <div className="grid grid-cols-4 gap-1 flex-1">
+
+    <div className="bg-neutral-800 border border-neutral-700 p-2 text-sm font-semibold text-center">
+      Task
+    </div>
+
+    <div className="bg-neutral-800 border border-neutral-700 p-2 text-sm font-semibold text-center">
+      Start
+    </div>
+
+    <div className="bg-neutral-800 border border-neutral-700 p-2 text-sm font-semibold text-center">
+      End
+    </div>
+
+    <div className="bg-neutral-800 border border-neutral-700 p-2 text-sm font-semibold text-center">
+      Remarks
+    </div>
+
+  </div>
+
+
+
+</div>
+
+          {/* 🔷 ROWS */}
+          {localEntry.tasks.map((task, i) => (
+            <div key={i} className="flex items-center gap-2">
+
+              {/* GRID CELLS */}
+              <div className="grid grid-cols-4 gap-1 flex-1">
+
+                {/* TASK */}
+                <div className="bg-neutral-800 border border-neutral-700 p-2 text-sm">
+                  {isEditing ? (
+                    <input
+                      value={task.task || ""}
+                      onChange={(e) =>
+                        handleTaskChange(i, "task", e.target.value)
+                      }
+                      placeholder="No task"
+                      className="w-full bg-transparent outline-none placeholder:text-gray-500"
+                    />
+                  ) : (
+                    <p className="text-gray-300">
+                      {task.task || (
+                        <span className="text-gray-500">No task</span>
+                      )}
+                    </p>
+                  )}
                 </div>
 
-                <input
-                  placeholder="Remarks"
-                  value={task.remarks || ""}
-                  onChange={(e) =>
-                    handleTaskChange(i, "remarks", e.target.value)
-                  }
-                  className="w-full bg-neutral-800 p-2 rounded-lg text-sm"
-                />
-              </>
-            ) : (
-              <>
-                <p className="font-medium text-sm">
-                    {task.task || "No Task"}
-                </p>
+                {/* START */}
+                <div className="bg-neutral-800 border border-neutral-700 p-2 text-center text-sm">
+                  {isEditing ? (
+                    <input
+                      type="time"
+                      value={task.start || ""}
+                      onChange={(e) =>
+                        handleTaskChange(i, "start", e.target.value)
+                      }
+                      className="bg-transparent text-center outline-none w-full"
+                    />
+                  ) : (
+                    <p className="text-gray-300">
+                      {task.start ? (
+                        formatTo12Hour(task.start)
+                      ) : (
+                        <span className="text-gray-500">--:--</span>
+                      )}
+                    </p>
+                  )}
+                </div>
 
-                <p className="text-xs text-gray-400">
-                    {task.start && task.end
-                    ? `${formatTo12Hour(task.start)} - ${formatTo12Hour(task.end)}`
-                    : "-:--"}
-                </p>
+                {/* END */}
+                <div className="bg-neutral-800 border border-neutral-700 p-2 text-center text-sm">
+                  {isEditing ? (
+                    <input
+                      type="time"
+                      value={task.end || ""}
+                      onChange={(e) =>
+                        handleTaskChange(i, "end", e.target.value)
+                      }
+                      className="bg-transparent text-center outline-none w-full"
+                    />
+                  ) : (
+                    <p className="text-gray-300">
+                      {task.end ? (
+                        formatTo12Hour(task.end)
+                      ) : (
+                        <span className="text-gray-500">--:--</span>
+                      )}
+                    </p>
+                  )}
+                </div>
 
-                <p className="text-xs text-gray-300">
-                    {task.remarks || "No remarks"}
-                </p>
-            </>
-            )}
+                {/* REMARKS */}
+                <div className="bg-neutral-800 border border-neutral-700 p-2 text-sm">
+                  {isEditing ? (
+                    <input
+                      value={task.remarks || ""}
+                      onChange={(e) =>
+                        handleTaskChange(i, "remarks", e.target.value)
+                      }
+                      placeholder="No remarks"
+                      className="w-full bg-transparent outline-none placeholder:text-gray-500"
+                    />
+                  ) : (
+                    <p className="text-gray-300">
+                      {task.remarks || (
+                        <span className="text-gray-500">No remark</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+
+              </div>
+
+              {/* DELETE BUTTON */}
+              {isEditing && localEntry.tasks.length > MIN_TASKS && (
+                <button
+                  onClick={() => removeTask(i)}
+                  className="text-red-400 px-1 absolute left-97"
+                >
+                  <Minus size={16} />
+                </button>
+              )}
+            </div>
+          ))}
           </div>
-        ))}
-      </div>
+        </div>
 
       {/* ================= NOTES ================= */}
       <h3 className="text-sm font-semibold">Notes</h3>
-      <div className="bg-neutral-900 rounded-xl p-4">
-        {isEditing ? (
-          <textarea
-            value={localEntry.notes || ""}
-            onChange={(e) =>
-              setLocalEntry({ ...localEntry, notes: e.target.value })
-            }
-            className="w-full bg-neutral-800 p-2 rounded-lg resize-none min-h-[100px] text-sm"
-          />
-        ) : (
-          <p className="text-sm text-gray-300 whitespace-pre-wrap">
-            {localEntry.notes || "No notes yet."}
-          </p>
+
+<div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3">
+  <div className="bg-neutral-800 border border-neutral-700 p-3 min-h-[160px] text-sm">
+
+    {isEditing ? (
+      <textarea
+        value={localEntry.notes || ""}
+        onChange={(e) =>
+          setLocalEntry({ ...localEntry, notes: e.target.value })
+        }
+        placeholder="No notes"
+        className="w-full h-full bg-transparent outline-none resize-none text-gray-300 placeholder:text-gray-500"
+      />
+    ) : (
+      <p className="text-gray-300 whitespace-pre-wrap">
+        {localEntry.notes || (
+          <span className="text-gray-500">No notes</span>
         )}
-      </div>
+      </p>
+    )}
+
+  </div>
+</div>
 
       {/* ================= TIME OUT MODAL ================= */}
       {showTimeOutModal && (

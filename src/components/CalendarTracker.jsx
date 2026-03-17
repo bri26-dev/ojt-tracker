@@ -165,7 +165,7 @@ function CalendarTracker({ entries }) {
                   {item.day}
                 </p>
 
-                <div className="mt-2 text-xs">
+                <div className="mt-6 text-xs">
 
                   {hours>0 && (
                     <p className={getText(hours)}>

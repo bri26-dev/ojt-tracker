@@ -126,12 +126,17 @@ function JournalList({ entries, onOpenEntry }) {
                   {/* Left */}
                   <div>
                     <p className="font-medium">
-                      {new Date(entry.date).toLocaleDateString(
-                        "default",
-                        { month: "short", day: "numeric" }
-                      )}
+                      {new Date(entry.date).toLocaleDateString("default", {
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </p>
 
+                    <p className="text-sm text-gray-400">
+                      {new Date(entry.date).toLocaleDateString("default", {
+                        weekday: "short",
+                      })}
+                    </p>
                     <p className="text-sm text-gray-400">
                       {formatTo12Hour(entry.timeIn)} –{" "}
                       {entry.timeOut
