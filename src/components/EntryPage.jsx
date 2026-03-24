@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   Edit3,
@@ -10,6 +10,35 @@ import {
   Minus,
   Save,
 } from "lucide-react";
+
+const AutoResizeTextarea = ({ value, onChange, placeholder }) => {
+  const ref = useRef(null);
+
+  const resize = () => {
+    if (ref.current) {
+      ref.current.style.height = "auto";
+      ref.current.style.height = ref.current.scrollHeight + "px";
+    }
+  };
+
+  useEffect(() => {
+    resize(); // 🔥 runs when component loads / edit mode opens
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => {
+        onChange(e);
+        resize(); // 🔥 resize while typing
+      }}
+      placeholder={placeholder}
+      rows={1}
+      className="w-full bg-transparent outline-none resize-none overflow-hidden leading-tight break-words text-gray-300 placeholder:text-gray-500"
+    />
+  );
+};
 
 const MIN_TASKS = 3;
 
@@ -231,7 +260,7 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
           onChange={(e) =>
             setLocalEntry({ ...localEntry, timeIn: e.target.value })
           }
-          className="bg-transparent text-sm text-center w-full outline-none"
+          className="bg-transparent text-sm text-center font-semibold w-full outline-none"
         />
       </div>
 
@@ -244,7 +273,7 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
           onChange={(e) =>
             setLocalEntry({ ...localEntry, timeOut: e.target.value })
           }
-          className="bg-transparent text-sm text-center w-full outline-none"
+          className="bg-transparent text-sm text-center font-semibold w-full outline-none"
         />
       </div>
 
@@ -342,16 +371,15 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
                 {/* TASK */}
                 <div className="bg-neutral-800 border border-neutral-700 p-2 text-sm">
                   {isEditing ? (
-                    <input
-                      value={task.task || ""}
-                      onChange={(e) =>
-                        handleTaskChange(i, "task", e.target.value)
-                      }
-                      placeholder="No task"
-                      className="w-full bg-transparent outline-none placeholder:text-gray-500"
-                    />
+                    <AutoResizeTextarea
+                    value={task.task || ""}
+                    onChange={(e) =>
+                      handleTaskChange(i, "task", e.target.value)
+                    }
+                    placeholder="No task"
+                  />
                   ) : (
-                    <p className="text-gray-300">
+                    <p className="text-gray-300 leading-tight break-words">
                       {task.task || (
                         <span className="text-gray-500">No task</span>
                       )}
@@ -406,18 +434,17 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
                 {/* REMARKS */}
                 <div className="bg-neutral-800 border border-neutral-700 p-2 text-sm">
                   {isEditing ? (
-                    <input
+                    <AutoResizeTextarea
                       value={task.remarks || ""}
                       onChange={(e) =>
                         handleTaskChange(i, "remarks", e.target.value)
                       }
                       placeholder="No remarks"
-                      className="w-full bg-transparent outline-none placeholder:text-gray-500"
                     />
                   ) : (
-                    <p className="text-gray-300">
+                    <p className="text-gray-300 leading-right break-words">
                       {task.remarks || (
-                        <span className="text-gray-500">No remark</span>
+                        <span className="text-gray-500 break-words">No remarks</span>
                       )}
                     </p>
                   )}
@@ -455,7 +482,7 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
         className="w-full h-full bg-transparent outline-none resize-none text-gray-300 placeholder:text-gray-500"
       />
     ) : (
-      <p className="text-gray-300 whitespace-pre-wrap">
+      <p className="text-gray-300 whitespace-pre-wrap break-words">
         {localEntry.notes || (
           <span className="text-gray-500">No notes</span>
         )}

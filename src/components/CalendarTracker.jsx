@@ -96,6 +96,9 @@ function CalendarTracker({ entries }) {
     <div>
 
       <h2 className="text-3xl font-bold text-white">Calendar</h2>
+      <p className="text-gray-400 text-sm mt-1">
+          Monitor you daily logs
+        </p>
 
       <div className="bg-neutral-900 p-5 rounded-xl mt-4">
 
