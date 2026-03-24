@@ -51,7 +51,7 @@ function JournalForm({ entries, setEntries, onClose, showToast }) {
         className="
           bg-neutral-900
           border border-neutral-800
-          w-full max-w-md
+          w-[90%] max-w-md
           p-6
           rounded-2xl
           space-y-5

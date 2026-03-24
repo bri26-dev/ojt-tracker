@@ -10,6 +10,7 @@ import {
   Minus,
   Save,
 } from "lucide-react";
+import ConfirmModal from "./ConfirmModal";
 
 const AutoResizeTextarea = ({ value, onChange, placeholder }) => {
   const ref = useRef(null);
@@ -48,6 +49,7 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
   /* NEW STATES */
   const [showTimeOutModal, setShowTimeOutModal] = useState(false);
   const [timeOutValue, setTimeOutValue] = useState("17:00");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const ensureMinimumTasks = (tasks = []) => {
     const safeTasks = [...tasks];
@@ -130,21 +132,25 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
   };
 
   const handleCancel = () => {
-    setLocalEntry((prev) => ({
-      ...prev,
-      tasks: ensureMinimumTasks(prev.tasks),
-      notes: prev.notes || "",
-    }));
+    setLocalEntry({
+      ...entry,
+      tasks: ensureMinimumTasks(entry.tasks),
+      notes: entry.notes || "",
+    });
+
     setIsEditing(false);
   };
 
   const handleDelete = () => {
-    if (!window.confirm("Delete this entry?")) return;
+    setShowDeleteModal(true);
+  };
 
+  const confirmDelete = () => {
     setEntries((prev) => prev.filter((e) => e.id !== localEntry.id));
 
     showToast("Entry Deleted.", "error");
 
+    setShowDeleteModal(false);
     goBack();
   };
 
@@ -469,6 +475,13 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
           )}
         </div>
       </div>
+      <ConfirmModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Delete Entry"
+        message="Are you sure you want to delete this entry? This action cannot be undone."
+      />
 
       {/* ================= TIME OUT MODAL ================= */}
       {showTimeOutModal && (

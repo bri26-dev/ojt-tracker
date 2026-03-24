@@ -2,7 +2,7 @@ import { FiHome, FiBook, FiCalendar } from "react-icons/fi";
 
 function Sidebar({ activePage, setActivePage }) {
   return (
-    <div className="fixed bottom-6 left-0 w-full flex justify-center z-50">
+    <div className="fixed bottom-6 left-0 w-full flex justify-center z-1">
       {/* Floating Glass Container */}
       <div className="bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 shadow-2xl rounded-2xl px-12 py-4 flex justify-between w-[96%] max-w-lg">
         <NavButton
