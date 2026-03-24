@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 
 function Toast({ message, type = "success", onClose }) {
-
   const colors = {
     success: "bg-green-500",
     error: "bg-red-500",

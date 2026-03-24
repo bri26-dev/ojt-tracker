@@ -7,7 +7,6 @@ import Toast from "./components/Toast";
 import { calculateHours } from "./utils/calculateHours";
 
 function App() {
-
   const [entries, setEntries] = useState(() => {
     const saved = localStorage.getItem("ojtEntries");
     return saved ? JSON.parse(saved) : [];
@@ -31,7 +30,7 @@ function App() {
 
   const totalHours = entries.reduce(
     (sum, entry) => sum + calculateHours(entry),
-    0
+    0,
   );
 
   const remainingHours = 500 - totalHours;
@@ -39,17 +38,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-
       {/* TOAST */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} />}
 
       <div className="flex-1 overflow-y-auto p-4 pb-24">
-
         {activePage === "dashboard" && (
           <Dashboard
             totalHours={totalHours}
@@ -67,17 +59,10 @@ function App() {
           />
         )}
 
-        {activePage === "calendar" && (
-          <CalendarTracker entries={entries} />
-        )}
-
+        {activePage === "calendar" && <CalendarTracker entries={entries} />}
       </div>
 
-      <Sidebar
-        activePage={activePage}
-        setActivePage={setActivePage}
-      />
-
+      <Sidebar activePage={activePage} setActivePage={setActivePage} />
     </div>
   );
 }

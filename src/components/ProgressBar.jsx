@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 function ProgressBar({ progress, totalHours, goalHours }) {
-  const size =300;
+  const size = 300;
   const stroke = 20;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -17,8 +17,7 @@ function ProgressBar({ progress, totalHours, goalHours }) {
 
   const safeProgress = Math.min(animatedProgress, 100);
 
-  const strokeDashoffset =
-    circumference - (safeProgress / 100) * circumference;
+  const strokeDashoffset = circumference - (safeProgress / 100) * circumference;
 
   const remaining = Math.max(goalHours - totalHours, 0);
 
@@ -31,9 +30,7 @@ function ProgressBar({ progress, totalHours, goalHours }) {
 
   return (
     <div className="flex flex-col items-center space-y-6">
-
       <div className="relative flex items-center justify-center">
-
         {/* Soft Glow */}
         <div
           className="absolute rounded-full blur-2xl opacity-15"
@@ -44,11 +41,7 @@ function ProgressBar({ progress, totalHours, goalHours }) {
           }}
         />
 
-        <svg
-          height={size}
-          width={size}
-          className="rotate-[-90deg]"
-        >
+        <svg height={size} width={size} className="rotate-[-90deg]">
           {/* Track */}
           <circle
             stroke="#1f2937"
@@ -76,7 +69,6 @@ function ProgressBar({ progress, totalHours, goalHours }) {
 
         {/* Center Content */}
         <div className="absolute flex flex-col items-center text-center">
-
           <span className="text-4xl font-bold tracking-tight">
             {safeProgress.toFixed(0)}%
           </span>
@@ -84,16 +76,12 @@ function ProgressBar({ progress, totalHours, goalHours }) {
           <span className="text-m font-semibold text-neutral-400 mt-1">
             {totalHours} / {goalHours} hours
           </span>
-
-         
-
         </div>
       </div>
 
       <div className="text-lg font-semibold text-neutral-400">
         {remaining} hours remaining
       </div>
-
     </div>
   );
 }

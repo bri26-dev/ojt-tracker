@@ -11,7 +11,6 @@ function Dashboard({
 
   return (
     <div className="max-h-screen text-white px-2 pt-2">
-
       {/* Header */}
       <div>
         <h2 className="text-3xl font-bold text-white">OJT Tracker</h2>
@@ -22,18 +21,15 @@ function Dashboard({
 
       {/* Progress Container */}
       <div className="flex flex-col items-center shadow-xl backdrop-blur-xl">
-
         <ProgressBar
           progress={progressPercent}
           totalHours={totalHours}
           goalHours={goal}
         />
-
       </div>
 
       {/* CTA Section */}
       <div className="p-6 text-center space-y-6">
-
         <div className="space-y-2">
           <h2 className="text-lg font-bold">
             {isNew ? "Start Logging Your Hours" : "Keep The Momentum"}
@@ -52,9 +48,7 @@ function Dashboard({
         >
           {isNew ? "Get Started" : "Add Entry"}
         </button>
-
       </div>
-
     </div>
   );
 }

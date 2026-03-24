@@ -6,7 +6,6 @@ import { Plus } from "lucide-react";
 import "../styles/FireButton.css";
 
 function Journal({ entries, setEntries, showToast }) {
-
   const [activeEntry, setActiveEntry] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -23,7 +22,6 @@ function Journal({ entries, setEntries, showToast }) {
 
   return (
     <div className="space-y-6 pb-28 relative">
-
       {/* Header */}
       <div>
         <h2 className="text-3xl font-bold text-white">Journal</h2>
@@ -70,7 +68,6 @@ function Journal({ entries, setEntries, showToast }) {
           onClose={() => setShowModal(false)}
         />
       )}
-
     </div>
   );
 }

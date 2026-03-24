@@ -2,7 +2,6 @@ import { useState } from "react";
 import { X } from "lucide-react";
 
 function JournalForm({ entries, setEntries, onClose, showToast }) {
-
   const today = new Date().toISOString().split("T")[0];
 
   const [date, setDate] = useState(today);
@@ -11,9 +10,7 @@ function JournalForm({ entries, setEntries, onClose, showToast }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const exists = entries.some(
-      (entry) => entry.date === date
-    );
+    const exists = entries.some((entry) => entry.date === date);
 
     if (exists) {
       showToast("Entry for this date already exists.", "error");
@@ -41,7 +38,6 @@ function JournalForm({ entries, setEntries, onClose, showToast }) {
   };
 
   return (
-
     <div
       className="
         fixed inset-0
@@ -51,7 +47,6 @@ function JournalForm({ entries, setEntries, onClose, showToast }) {
         z-50
       "
     >
-
       <div
         className="
           bg-neutral-900
@@ -63,28 +58,17 @@ function JournalForm({ entries, setEntries, onClose, showToast }) {
           animate-fadeIn
         "
       >
-
         <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">New Journal Entry</h3>
 
-          <h3 className="text-lg font-semibold">
-            New Journal Entry
-          </h3>
-
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X />
           </button>
-
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
           <div>
-            <label className="text-sm text-gray-400">
-              Date
-            </label>
+            <label className="text-sm text-gray-400">Date</label>
 
             <input
               type="date"
@@ -95,9 +79,7 @@ function JournalForm({ entries, setEntries, onClose, showToast }) {
           </div>
 
           <div>
-            <label className="text-sm text-gray-400">
-              Time In
-            </label>
+            <label className="text-sm text-gray-400">Time In</label>
 
             <input
               type="time"
@@ -108,7 +90,6 @@ function JournalForm({ entries, setEntries, onClose, showToast }) {
           </div>
 
           <div className="flex gap-3 pt-2">
-
             <button
               type="submit"
               className="
@@ -135,13 +116,9 @@ function JournalForm({ entries, setEntries, onClose, showToast }) {
             >
               Cancel
             </button>
-
           </div>
-
         </form>
-
       </div>
-
     </div>
   );
 }

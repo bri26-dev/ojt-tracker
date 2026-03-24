@@ -3,10 +3,8 @@ import { FiHome, FiBook, FiCalendar } from "react-icons/fi";
 function Sidebar({ activePage, setActivePage }) {
   return (
     <div className="fixed bottom-6 left-0 w-full flex justify-center z-50">
-      
       {/* Floating Glass Container */}
       <div className="bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 shadow-2xl rounded-2xl px-12 py-4 flex justify-between w-[96%] max-w-lg">
-
         <NavButton
           icon={FiHome}
           label="Dashboard"
@@ -27,7 +25,6 @@ function Sidebar({ activePage, setActivePage }) {
           active={activePage === "journal"}
           onClick={() => setActivePage("journal")}
         />
-
       </div>
     </div>
   );
@@ -61,9 +58,7 @@ function NavButton({ icon: Icon, label, active, onClick }) {
       {/* Label */}
       <span
         className={`relative z-10 mt-1 text-[11px] tracking-wide transition-all duration-300 ${
-          active
-            ? "text-white"
-            : "text-gray-500 group-hover:text-gray-300"
+          active ? "text-white" : "text-gray-500 group-hover:text-gray-300"
         }`}
       >
         {label}
