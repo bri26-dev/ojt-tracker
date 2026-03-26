@@ -53,7 +53,7 @@ function Journal({ entries, setEntries, showToast }) {
           transform transition-transform duration-300 ease-in-out
           hover:scale-115
           animate-[fire-pulse_1.5s_infinite_alternate]
-          z-50
+          z-1
         "
       >
         <Plus size={28} />
