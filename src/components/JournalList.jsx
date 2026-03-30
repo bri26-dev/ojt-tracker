@@ -202,6 +202,18 @@ function JournalList({ entries, onOpenEntry }) {
 
   /* 🔥 GENERATE */
   const handleGenerate = () => {
+    if (!entries.length) {
+      setResults([
+        {
+          title: "No Data",
+          range: "",
+          narrative: "No entries available to generate a report.",
+          notes: "",
+        },
+      ]);
+      return;
+    }
+
     setLoading(true);
     setResults([]);
     setCopied(false);
@@ -254,11 +266,6 @@ function JournalList({ entries, onOpenEntry }) {
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
-
-  if (!entries.length)
-    return (
-      <div className="text-gray-400 text-center mt-10">No entries yet.</div>
-    );
 
   return (
     <div className="space-y-6">

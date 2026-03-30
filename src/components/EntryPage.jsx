@@ -458,13 +458,9 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3">
         <div className="bg-neutral-800 border border-neutral-700 p-3 min-h-[160px] text-sm">
           {isEditing ? (
-            <textarea
+            <NotesTextarea
               value={localEntry.notes || ""}
-              onChange={(e) =>
-                setLocalEntry({ ...localEntry, notes: e.target.value })
-              }
-              placeholder="No notes"
-              className="w-full h-full bg-transparent outline-none resize-none text-gray-300 placeholder:text-gray-500"
+              onChange={(val) => setLocalEntry({ ...localEntry, notes: val })}
             />
           ) : (
             <p className="text-gray-300 whitespace-pre-wrap break-words">
@@ -537,6 +533,76 @@ const formatTo12Hour = (time) => {
   const ampm = hour >= 12 ? "PM" : "AM";
   const formattedHour = hour % 12 || 12;
   return `${formattedHour}:${minute.toString().padStart(2, "0")} ${ampm}`;
+};
+
+const NotesTextarea = ({ value, onChange }) => {
+  const ref = useRef(null);
+
+  const handleInput = (e) => {
+    let text = e.target.value;
+
+    // Auto add bullet at start
+    if (text.length === 1 && text !== "•") {
+      text = "• " + text;
+    }
+
+    onChange(text);
+
+    // Auto resize
+    if (ref.current) {
+      ref.current.style.height = "auto";
+      ref.current.style.height = ref.current.scrollHeight + "px";
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      const cursor = e.target.selectionStart;
+      const text = value;
+
+      const newText =
+        text.substring(0, cursor) + "\n• " + text.substring(cursor);
+
+      onChange(newText);
+
+      // Move cursor after bullet
+      setTimeout(() => {
+        if (ref.current) {
+          ref.current.selectionStart = ref.current.selectionEnd = cursor + 3;
+        }
+      }, 0);
+    }
+  };
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = "auto";
+      ref.current.style.height = ref.current.scrollHeight + "px";
+    }
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={handleInput}
+      onKeyDown={handleKeyDown}
+      placeholder="No notes"
+      className="
+        w-full 
+        bg-transparent 
+        outline-none 
+        resize-none 
+        overflow-hidden 
+        text-gray-300 
+        placeholder:text-gray-500
+        leading-relaxed
+      "
+      style={{ minHeight: "160px" }} // matches container height
+    />
+  );
 };
 
 export default EntryPage;
