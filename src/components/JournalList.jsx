@@ -273,7 +273,10 @@ function JournalList({ entries, onOpenEntry }) {
       <div className="grid grid-cols-3 gap-3">
         <SummaryCard label="Entries" value={totalEntries} />
         <SummaryCard label="Completed" value={completedDays} />
-        <SummaryCard label="Total Hours" value={`${totalHours.toFixed(1)}h`} />
+        <SummaryCard
+          label="Total Hours"
+          value={`${Number(totalHours.toFixed(1)).toString()} hrs`}
+        />
       </div>
 
       {/* CARD */}

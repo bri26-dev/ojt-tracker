@@ -44,6 +44,7 @@ function App() {
       <div className="flex-1 overflow-y-auto p-4 pb-24">
         {activePage === "dashboard" && (
           <Dashboard
+            entries={entries} // MUST BE HERE
             totalHours={totalHours}
             remainingHours={remainingHours}
             progressPercent={progressPercent}

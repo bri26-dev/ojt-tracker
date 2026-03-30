@@ -92,7 +92,11 @@ function EntryPage({ entry, setEntries, goBack, showToast }) {
     let hours = end - start;
     if (start < 13 && end > 12) hours -= 1;
 
-    return `${Math.max(hours, 0).toFixed(1)}h`;
+    return `${
+      Math.max(hours, 0) % 1 === 0
+        ? Math.max(hours, 0)
+        : Math.max(hours, 0).toFixed(1)
+    } hrs`;
   };
 
   /* ================= TASK CONTROLS ================= */

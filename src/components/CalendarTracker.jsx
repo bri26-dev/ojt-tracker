@@ -120,12 +120,17 @@ function CalendarTracker({ entries }) {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6 text-sm">
-          <Stat label="Total Hours" value={`${totalHours.toFixed(1)} hrs`} />
+          <Stat
+            label="Total Hours"
+            value={`${Number(totalHours.toFixed(1)).toString()} hrs`}
+          />
           <Stat label="Days Logged" value={daysLogged} />
           <Stat
             label="Average"
             value={
-              daysLogged ? `${(totalHours / daysLogged).toFixed(1)} hrs` : "0"
+              daysLogged
+                ? `${Number((totalHours / daysLogged).toFixed(1).toString())} hrs`
+                : "0"
             }
           />
         </div>
