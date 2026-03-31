@@ -1,4 +1,5 @@
 import { FiCalendar, FiClock, FiTrendingUp, FiTarget } from "react-icons/fi";
+import { useEffect, useState } from "react";
 
 function Dashboard({
   entries = [],
@@ -7,23 +8,21 @@ function Dashboard({
   progressPercent = 0,
   setActivePage,
 }) {
-  const GOAL_DAYS = 62.5; // 🔥 500 / 8
+  /* ================= CONSTANTS ================= */
+  const TOTAL_GOAL_HOURS = 500;
+  const HOURS_PER_DAY = 8;
 
-  /* 🔥 DAYS LOGGED */
   const completedDays = new Set(
     entries
       .filter((e) => e && typeof e.date === "string" && e.date.length > 0)
       .map((e) => e.date),
   ).size;
 
-  /* 🔥 AVERAGE */
   const avgHours = completedDays > 0 ? totalHours / completedDays : 0;
-
-  /* 🔥 DAYS LEFT BASED ON GOAL */
-  const remainingDays = Math.max(Math.ceil(GOAL_DAYS - completedDays), 0);
-
+  const remainingDays = Math.max(remainingHours / HOURS_PER_DAY, 0);
   const isNew = entries.length === 0;
 
+  /* ================= STATS ================= */
   const stats = [
     {
       label: "Days",
@@ -33,44 +32,66 @@ function Dashboard({
     },
     {
       label: "Left",
-      value: `${Number(remainingDays.toFixed(1)).toString()}`,
+      value: `${Number(remainingDays.toFixed(1))}`,
       icon: <FiTarget size={14} />,
       glow: "shadow-[0_0_18px_rgba(249,115,22,0.35)] border-orange-500/40",
     },
     {
       label: "Total",
-      value: `${Number(totalHours.toFixed(1)).toString()} hrs`,
+      value: `${Number(totalHours.toFixed(1))} hrs`,
       icon: <FiClock size={14} />,
       glow: "shadow-[0_0_18px_rgba(34,211,238,0.35)] border-cyan-500/40",
     },
     {
       label: "Ave",
-      value: `${Number(avgHours.toFixed(1)).toString()} hrs`,
+      value: `${Number(avgHours.toFixed(1))} hrs`,
       icon: <FiTrendingUp size={14} />,
       glow: "shadow-[0_0_18px_rgba(168,85,247,0.35)] border-purple-500/40",
     },
   ];
 
-  /* 🔥 STATIC COLOR */
-  const getDotColor = (index) => {
-    const ratio = index / 19;
+  /* ================= COLOR ================= */
+  const getDotColor = (index, boost = 0) => {
+    let baseHue;
 
-    if (progressPercent < 25) return `hsl(0 85% ${22 + ratio * 28}%)`;
-    if (progressPercent < 50) return `hsl(28 95% ${28 + ratio * 25}%)`;
-    if (progressPercent < 75) return `hsl(90 80% ${28 + ratio * 25}%)`;
-    if (progressPercent < 100) return `hsl(142 75% ${28 + ratio * 25}%)`;
+    if (progressPercent < 25) baseHue = 0;
+    else if (progressPercent < 50) baseHue = 28;
+    else if (progressPercent < 75) baseHue = 90;
+    else if (progressPercent < 100) baseHue = 142;
+    else baseHue = 210;
 
-    return `hsl(210 90% ${30 + ratio * 25}%)`;
+    const section = Math.floor(index / 5);
+    const local = (index % 5) / 4;
+
+    const baseLightness = [26, 30, 34, 38];
+    const baseSaturation = [70, 78, 86, 94];
+
+    const lightness = baseLightness[section] + local * 4 + boost * 6;
+    const saturation = baseSaturation[section] + local * 4 + boost * 4;
+
+    return `hsl(${baseHue} ${saturation}% ${lightness}%)`;
   };
 
-  const filledCount = Math.round((progressPercent / 100) * 20);
+  /* ================= PROGRESS ================= */
+  const filledCount = Math.max(1, Math.round((progressPercent / 100) * 20));
+
+  /* ================= SNAKE ANIMATION ================= */
+  const [pulseIndex, setPulseIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPulseIndex((prev) => (prev + 1) % 20); // full loop always
+    }, 130); // speed
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="min-h-screen text-white p-3 space-y-6">
+    <div className="min-h-screen text-white space-y-6">
       {/* HEADER */}
       <div>
-        <h1 className="text-2xl font-bold">OJT Dashboard</h1>
-        <p className="text-neutral-400 text-sm">
+        <h2 className="text-3xl font-bold text-white">OJT Dashboard</h2>
+        <p className="text-gray-400 text-sm mt-1">
           Track your internship journey
         </p>
       </div>
@@ -86,7 +107,6 @@ function Dashboard({
               <p className="text-[12px] truncate">{card.label}</p>
               {card.icon}
             </div>
-
             <h3 className="text-base font-bold mt-2">{card.value}</h3>
           </div>
         ))}
@@ -103,25 +123,49 @@ function Dashboard({
               const angle = (i / 20) * 2 * Math.PI + offset;
 
               const radius = 80;
-
               const x = 110 + radius * Math.cos(angle);
               const y = 110 + radius * Math.sin(angle);
 
               const filled = i < filledCount;
+
+              /* 🔥 snake distance (one direction only) */
+              const distance = (pulseIndex - i + 20) % 20;
+
+              const trailLength = 6;
+
+              const isActive = filled;
+
+              let boost = 0;
+              let size = 10;
+              let glow = 0;
+
+              if (isActive && distance < trailLength) {
+                const t = 1 - distance / trailLength;
+                const eased = t * t;
+
+                boost = eased;
+                size = 10 + eased * 2;
+                glow = eased * 12;
+              }
+
+              const color = getDotColor(i, boost);
 
               return (
                 <circle
                   key={i}
                   cx={x}
                   cy={y}
-                  r="10"
+                  r={size}
                   style={{
-                    fill: filled ? getDotColor(i) : "#1e293b",
+                    fill: filled ? color : "#020617",
                     filter: filled
-                      ? "drop-shadow(0 0 10px rgba(255,255,255,0.15))"
+                      ? `
+    drop-shadow(0 0 ${1 + glow * 0.4}px ${color})
+    drop-shadow(0 0 ${2 + glow * 0.6}px ${color})
+  `
                       : "none",
+                    transition: isActive ? "all 0.25s ease-out" : "none",
                   }}
-                  className="transition-all duration-700"
                 />
               );
             })}
