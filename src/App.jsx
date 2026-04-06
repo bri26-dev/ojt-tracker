@@ -60,7 +60,7 @@ function App() {
   );
 
   const remainingHours = 500 - totalHours;
-  const progressPercent = (totalHours / 500) * 100;
+  const progressPercent = Math.min((totalHours / 500) * 100, 100);
 
   /* 🔥 FIXED PAGE CHANGE */
   const handlePageChange = (newPage) => {
