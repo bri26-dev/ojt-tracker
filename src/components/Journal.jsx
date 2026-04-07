@@ -76,7 +76,7 @@ function Journal({
           onClick={() => setShowModal(true)}
           className="
             fixed 
-            bottom-[calc(6rem+1.5rem)] 
+            bottom-[calc(5rem+1.5rem)] 
             right-6 
             w-16 h-16 
             rounded-full 

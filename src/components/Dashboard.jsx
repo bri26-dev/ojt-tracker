@@ -11,6 +11,7 @@ import {
   BarChart,
   Bar,
   XAxis,
+  YAxis,
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
@@ -28,6 +29,30 @@ function Dashboard({
   const TOTAL_GOAL_HOURS = 500;
   const HOURS_PER_DAY = 8;
 
+  const [holidays, setHolidays] = useState({});
+
+  useEffect(() => {
+    const year = new Date().getFullYear();
+
+    const fetchHolidays = async () => {
+      try {
+        const res = await fetch(
+          `https://date.nager.at/api/v3/PublicHolidays/${year}/PH`,
+        );
+        const data = await res.json();
+        const map = {};
+        data.forEach((h) => {
+          map[h.date] = h.localName || h.name;
+        });
+        setHolidays(map);
+      } catch (err) {
+        console.error("Failed to fetch holidays:", err);
+      }
+    };
+
+    fetchHolidays();
+  }, []);
+
   /* ================= HELPERS ================= */
   const calculateHours = (entry) => {
     if (!entry?.timeIn || !entry?.timeOut) return 0;
@@ -44,16 +69,30 @@ function Dashboard({
   };
 
   /* ================= CORE MEMOS ================= */
-  const formatTime = (time) => {
-    if (!time) return "--";
-    const [h, m] = time.split(":").map(Number);
-    const period = h >= 12 ? "PM" : "AM";
-    const hour12 = h % 12 || 12;
-    return `${hour12}:${String(m).padStart(2, "0")}${period.toLowerCase()}`;
-  };
-
   const completedDays = useMemo(() => {
     return new Set(entries.filter((e) => e?.date).map((e) => e.date)).size;
+  }, [entries]);
+
+  const streak = useMemo(() => {
+    if (!entries.length) return 0;
+
+    const datesSet = new Set(entries.map((e) => e.date));
+
+    let count = 0;
+    let current = new Date();
+
+    while (true) {
+      const key = current.toISOString().split("T")[0];
+
+      if (datesSet.has(key)) {
+        count++;
+        current.setDate(current.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return count;
   }, [entries]);
 
   const avgHours = completedDays ? totalHours / completedDays : 0;
@@ -77,20 +116,65 @@ function Dashboard({
     return map;
   }, [entries]);
 
+  const formatDate = (date) => {
+    if (!date) return "--";
+
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const estimatedFinishDate = useMemo(() => {
+    if (!entries.length || avgHours <= 0) return null;
+
+    let remaining = remainingHours;
+    let current = new Date();
+
+    while (remaining > 0) {
+      current.setDate(current.getDate() + 1);
+
+      const key = current.toISOString().split("T")[0];
+      const day = current.getDay();
+
+      const isWeekend = day === 0 || day === 6;
+      const isHoliday = holidays[key]; // ✅ check your fetched holidays map
+
+      if (isWeekend || isHoliday) continue; // skip these days
+
+      remaining -= avgHours;
+    }
+
+    return new Date(current);
+  }, [entries, avgHours, remainingHours, holidays]);
+
+  const formatTime = (time) => {
+    if (!time) return "--";
+    const [h, m] = time.split(":").map(Number);
+    const period = h >= 12 ? "PM" : "AM";
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${String(m).padStart(2, "0")}${period.toLowerCase()}`;
+  };
+
   /* ================= MONTHLY ================= */
   const monthlyData = useMemo(() => {
     const map = {};
 
     entries.forEach((e) => {
       if (!e?.date) return;
+
       const d = new Date(e.date);
       if (isNaN(d)) return;
 
       const key = `${d.getFullYear()}-${d.getMonth()}`;
+
       if (!map[key]) {
         map[key] = {
           month: d.toLocaleString("default", { month: "short" }),
           hours: 0,
+          date: new Date(d.getFullYear(), d.getMonth(), 1),
         };
       }
 
@@ -98,6 +182,7 @@ function Dashboard({
     });
 
     return Object.values(map)
+      .sort((a, b) => a.date - b.date) // ✅ ensure correct order
       .slice(-6)
       .map((m) => ({
         name: m.month,
@@ -107,27 +192,47 @@ function Dashboard({
 
   /* ================= 7 DAY TREND ================= */
   const trendData = useMemo(() => {
-    const sortedDates = Object.keys(entriesByDate)
-      .sort((a, b) => new Date(a) - new Date(b))
-      .slice(-7);
+    const today = new Date();
 
-    return sortedDates.map((dateStr) => {
-      const total = (entriesByDate[dateStr] || []).reduce(
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date();
+      d.setDate(today.getDate() - (6 - i)); // last 7 days ending today
+
+      const key = d.toISOString().split("T")[0];
+
+      const total = (entriesByDate[key] || []).reduce(
         (sum, e) => sum + calculateHours(e),
         0,
       );
 
-      const date = new Date(dateStr);
-
       return {
-        day: date.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        }),
+        day: d.toLocaleDateString("en-US", { weekday: "short" }), // Mon, Tue...
+        date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         hours: Number(total.toFixed(1)),
       };
     });
   }, [entriesByDate]);
+
+  const getTrend = (data) => {
+    if (!data || data.length < 2) return "No data";
+
+    const first = data[0].hours;
+    const last = data[data.length - 1].hours;
+
+    const diff = last - first;
+
+    // also check average slope
+    const avg = data.reduce((sum, d) => sum + d.hours, 0) / data.length;
+
+    if (diff > 1) return "↗ increasing";
+    if (diff < -1) return "↘ declining";
+
+    // fallback subtle detection
+    if (last > avg) return "↗ slightly improving";
+    if (last < avg) return "↘ slightly declining";
+
+    return "→ stable";
+  };
 
   /* ================= PRODUCTIVITY ================= */
   const productivityScore = useMemo(() => {
@@ -246,7 +351,6 @@ function Dashboard({
       </div>
 
       {/* SUMMARY */}
-      {/* SUMMARY */}
       <div className="grid grid-cols-4 gap-2">
         {stats.map((card, i) => (
           <div
@@ -334,8 +438,8 @@ function Dashboard({
                     strokeWidth: filled ? 1.4 : 1,
                     filter: filled
                       ? `
-      drop-shadow(0 0 ${2 + glow * 0.6}px ${color.glow})
-      drop-shadow(0 0 ${4 + glow * 0.8}px ${color.glow})
+      drop-shadow(0 0 ${2 + glow * 0.4}px ${color.glow})
+      drop-shadow(0 0 ${4 + glow * 0.6}px ${color.glow})
     `
                       : "none",
                     transition: "all 0.25s ease-out",
@@ -386,45 +490,54 @@ function Dashboard({
       <div className="space-y-4 ">
         <div className="grid grid-cols-2 gap-2 ">
           {/* 🔥 STREAK CARD */}
-          <div
-            className="
-          relative overflow-hidden
-          bg-gradient-to-br from-orange-500/10 to-red-500/10
-          border border-orange-500/30
-          rounded-xl p-4
-          shadow-[0_0_25px_rgba(249,115,22,0.25)]
-        "
-          >
+          <div className="relative overflow-hidden bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl p-4 shadow-[0_0_25px_rgba(249,115,22,0.25)]">
             {/* glow orb */}
             <div className="absolute -top-6 -right-6 w-24 h-24 bg-orange-500/20 blur-3xl rounded-full animate-pulse" />
 
-            {/* content */}
+            {/* header */}
             <div className="flex items-center justify-between">
               <p className="text-xs text-orange-300">Streak</p>
-
-              {/* 🔥 flame icon */}
               <div className="text-orange-400 text-lg animate-bounce">🔥</div>
             </div>
 
+            {/* count */}
             <h3 className="text-2xl font-bold mt-2 text-white tracking-tight">
-              {completedDays > 0 ? `${completedDays}` : "0"}
+              {Math.min(streak, 5)}
               <span className="text-sm text-orange-300 ml-1">days</span>
             </h3>
 
+            {/* message */}
             <p className="text-[11px] text-orange-200/70 mt-1">
-              {completedDays > 0
-                ? "You're on fire — keep going"
-                : "Start your streak today"}
+              {streak === 0
+                ? "Start your streak today"
+                : streak <= 2
+                  ? "Getting started — keep it up!"
+                  : streak <= 4
+                    ? "On fire! Almost full streak!"
+                    : "🔥 Full streak! Amazing consistency!"}
             </p>
 
-            {/* 🔥 animated bar */}
-            <div className="mt-3 h-1 w-full bg-orange-900/40 rounded overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-orange-400 to-red-500 animate-pulse"
-                style={{
-                  width: `${Math.min((completedDays / 30) * 100, 100)}%`,
-                }}
-              />
+            {/* 🔥 streak dashes */}
+            <div className="mt-3 flex justify-between gap-1">
+              {Array.from({ length: 5 }).map((_, i) => {
+                const filled = i < Math.min(streak, 5);
+                const boost = filled ? (i + 1) / 5 : 0; // gradual fire intensity
+
+                return (
+                  <div
+                    key={i}
+                    className={`h-2 flex-1 rounded-full transition-all duration-300`}
+                    style={{
+                      backgroundColor: filled
+                        ? `hsl(${30 - boost * 10}, ${60 + boost * 20}%, ${30 + boost * 30}%)`
+                        : "#1f2937",
+                      boxShadow: filled
+                        ? `0 0 ${4 + boost * 10}px hsl(${30 - boost * 10}, ${60 + boost * 20}%, ${30 + boost * 30}%)`
+                        : "none",
+                    }}
+                  />
+                );
+              })}
             </div>
           </div>
           {/* 🎯 EST FINISH CARD */}
@@ -447,15 +560,14 @@ function Dashboard({
               <div className="text-blue-400 text-lg animate-pulse">🎯</div>
             </div>
 
-            <h3 className="text-2xl font-bold mt-2 text-white tracking-tight">
-              {remainingDays.toFixed(1)}
-              <span className="text-sm text-blue-300 ml-1">days</span>
+            <h3 className="text-xl font-bold mt-2 text-white tracking-tight">
+              {estimatedFinishDate ? formatDate(estimatedFinishDate) : "--"}
             </h3>
 
             <p className="text-[11px] text-blue-200/70 mt-1">
-              {avgHours > 0
-                ? "Based on your current pace"
-                : "Not enough data yet"}
+              {estimatedFinishDate
+                ? `At ~${avgHours.toFixed(1)} hrs/day pace`
+                : "Log more data to predict finish"}
             </p>
 
             {/* 📊 mini progress indicator */}
@@ -475,6 +587,46 @@ function Dashboard({
               ))}
             </div>
           </div>
+        </div>
+
+        {/* 🧠 TASK LOAD */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-violet-500/30 rounded-2xl p-4 shadow-[0_0_25px_rgba(139,92,246,0.18)]">
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-violet-400/20 blur-3xl rounded-full animate-pulse" />
+
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-semibold">Task Load</p>
+            <div className="text-lg animate-bounce">🧠</div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-3">
+              <div className="flex items-center justify-center gap-2 text-violet-300">
+                <FiCheckSquare size={14} />
+                <p className="text-[10px]">Total Tasks</p>
+              </div>
+              <p className="text-xl font-bold text-center mt-2">
+                {taskLoad.totalTasks}
+              </p>
+            </div>
+
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-3">
+              <div className="flex items-center justify-center gap-2 text-fuchsia-300">
+                <FiLayers size={14} />
+                <p className="text-[10px]">Daily Avg</p>
+              </div>
+              <p className="text-xl font-bold text-center mt-2">
+                {taskLoad.avgTasks}
+              </p>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-violet-200/70 mt-3">
+            {Number(taskLoad.avgTasks) >= 5
+              ? "Heavy daily workload"
+              : Number(taskLoad.avgTasks) >= 3
+                ? "Balanced daily workload"
+                : "Light task distribution"}
+          </p>
         </div>
 
         {/* 📊 MONTHLY / WEEKLY BAR GRAPH */}
@@ -547,6 +699,20 @@ function Dashboard({
                 tickLine={false}
               />
 
+              {/* ✅ Add YAxis */}
+              <YAxis
+                tick={{ fill: "#9ca3af", fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                label={{
+                  value: "Hours",
+                  angle: -90,
+                  position: "insideLeft",
+                  fill: "#9ca3af",
+                  fontSize: 12,
+                }}
+              />
+
               <Tooltip
                 cursor={{ fill: "rgba(99,102,241,0.08)" }}
                 contentStyle={{
@@ -573,13 +739,7 @@ function Dashboard({
               {monthlyData.reduce((sum, m) => sum + m.hours, 0).toFixed(1)} hrs
             </span>
 
-            <span className="text-[11px] text-violet-300">
-              {monthlyData.length >= 2 &&
-              monthlyData[monthlyData.length - 1]?.hours >
-                monthlyData[monthlyData.length - 2]?.hours
-                ? "↗ improving"
-                : "→ stable"}
-            </span>
+            <span className="text-violet-300">{getTrend(monthlyData)}</span>
           </div>
         </div>
 
@@ -643,6 +803,8 @@ function Dashboard({
 
               <XAxis
                 dataKey="day"
+                interval={0}
+                padding={{ left: 10, right: 10 }} // ✅ prevents clipping
                 tick={{ fill: "#9ca3af", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
@@ -682,11 +844,7 @@ function Dashboard({
               {trendData.filter((d) => d.hours >= 8).length} productive days
             </span>
 
-            <span className="text-cyan-300">
-              {trendData[6]?.hours > trendData[0]?.hours
-                ? "↗ momentum rising"
-                : "→ steady pace"}
-            </span>
+            <span className="text-cyan-300">{getTrend(trendData)}</span>
           </div>
         </div>
 
@@ -744,7 +902,9 @@ function Dashboard({
 
               {/* center text */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pt-6">
-                <span className="text-2xl font-bold">{productivityScore}%</span>
+                <span className="text-2xl mt-4 font-bold">
+                  {productivityScore}%
+                </span>
                 <span className="text-[10px] text-emerald-300">Efficiency</span>
               </div>
             </div>
@@ -757,46 +917,6 @@ function Dashboard({
                   : "Try aiming for more full days"}
             </p>
           </div>
-        </div>
-
-        {/* 🧠 TASK LOAD */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-violet-500/30 rounded-2xl p-4 shadow-[0_0_25px_rgba(139,92,246,0.18)]">
-          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-violet-400/20 blur-3xl rounded-full animate-pulse" />
-
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-semibold">Task Load</p>
-            <div className="text-lg animate-bounce">🧠</div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-3">
-              <div className="flex items-center justify-center gap-2 text-violet-300">
-                <FiCheckSquare size={14} />
-                <p className="text-[10px]">Total Tasks</p>
-              </div>
-              <p className="text-xl font-bold text-center mt-2">
-                {taskLoad.totalTasks}
-              </p>
-            </div>
-
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-3">
-              <div className="flex items-center justify-center gap-2 text-fuchsia-300">
-                <FiLayers size={14} />
-                <p className="text-[10px]">Daily Avg</p>
-              </div>
-              <p className="text-xl font-bold text-center mt-2">
-                {taskLoad.avgTasks}
-              </p>
-            </div>
-          </div>
-
-          <p className="text-[11px] text-violet-200/70 mt-3">
-            {Number(taskLoad.avgTasks) >= 5
-              ? "Heavy daily workload"
-              : Number(taskLoad.avgTasks) >= 3
-                ? "Balanced daily workload"
-                : "Light task distribution"}
-          </p>
         </div>
 
         {/* ⚡ CONSISTENCY */}
