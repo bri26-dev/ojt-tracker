@@ -1,4 +1,5 @@
 import {
+  FiHome,
   FiCalendar,
   FiClock,
   FiTrendingUp,
@@ -22,12 +23,24 @@ import {
 function Dashboard({
   entries = [],
   totalHours = 0,
-  remainingHours = 500,
-  progressPercent = 0,
   setActivePage,
+  requiredHours = 500,
 }) {
-  const TOTAL_GOAL_HOURS = 500;
   const HOURS_PER_DAY = 8;
+
+  /* ✅ SINGLE SOURCE OF TRUTH */
+  const goalHours = useMemo(() => {
+    const parsed = Number(requiredHours);
+    return parsed > 0 ? parsed : 500;
+  }, [requiredHours]);
+
+  const remainingHours = useMemo(() => {
+    return Math.max(goalHours - totalHours, 0);
+  }, [goalHours, totalHours]);
+
+  const progressPercent = useMemo(() => {
+    return Math.min((totalHours / goalHours) * 100, 100);
+  }, [totalHours, goalHours]);
 
   const [holidays, setHolidays] = useState({});
 
@@ -40,10 +53,12 @@ function Dashboard({
           `https://date.nager.at/api/v3/PublicHolidays/${year}/PH`,
         );
         const data = await res.json();
+
         const map = {};
         data.forEach((h) => {
           map[h.date] = h.localName || h.name;
         });
+
         setHolidays(map);
       } catch (err) {
         console.error("Failed to fetch holidays:", err);
@@ -53,7 +68,7 @@ function Dashboard({
     fetchHolidays();
   }, []);
 
-  /* ================= HELPERS ================= */
+  /* ✅ SHARED HOUR CALCULATOR */
   const calculateHours = (entry) => {
     if (!entry?.timeIn || !entry?.timeOut) return 0;
 
@@ -62,22 +77,39 @@ function Dashboard({
 
     let hrs = outH + outM / 60 - (inH + inM / 60);
 
-    // auto lunch deduction
     if (inH < 13 && outH > 12) hrs -= 1;
 
     return Math.max(hrs, 0);
   };
 
-  /* ================= CORE MEMOS ================= */
   const completedDays = useMemo(() => {
     return new Set(entries.filter((e) => e?.date).map((e) => e.date)).size;
+  }, [entries]);
+
+  const avgHours = useMemo(() => {
+    return completedDays ? totalHours / completedDays : 0;
+  }, [completedDays, totalHours]);
+
+  const remainingDays = useMemo(() => {
+    return Math.max(remainingHours / HOURS_PER_DAY, 0);
+  }, [remainingHours]);
+
+  const isNew = entries.length === 0;
+
+  const entriesByDate = useMemo(() => {
+    const map = {};
+    entries.forEach((e) => {
+      if (!e?.date) return;
+      if (!map[e.date]) map[e.date] = [];
+      map[e.date].push(e);
+    });
+    return map;
   }, [entries]);
 
   const streak = useMemo(() => {
     if (!entries.length) return 0;
 
     const datesSet = new Set(entries.map((e) => e.date));
-
     let count = 0;
     let current = new Date();
 
@@ -95,25 +127,11 @@ function Dashboard({
     return count;
   }, [entries]);
 
-  const avgHours = completedDays ? totalHours / completedDays : 0;
-  const remainingDays = Math.max(remainingHours / HOURS_PER_DAY, 0);
-  const isNew = entries.length === 0;
-
   const recentEntries = useMemo(() => {
     return [...entries]
       .filter((e) => e?.date)
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .slice(0, 7);
-  }, [entries]);
-
-  const entriesByDate = useMemo(() => {
-    const map = {};
-    entries.forEach((e) => {
-      if (!e?.date) return;
-      if (!map[e.date]) map[e.date] = [];
-      map[e.date].push(e);
-    });
-    return map;
   }, [entries]);
 
   const formatDate = (date) => {
@@ -125,6 +143,16 @@ function Dashboard({
       day: "numeric",
       year: "numeric",
     });
+  };
+
+  const formatTime = (time) => {
+    if (!time) return "--";
+
+    const [h, m] = time.split(":").map(Number);
+    const period = h >= 12 ? "PM" : "AM";
+    const hour12 = h % 12 || 12;
+
+    return `${hour12}:${String(m).padStart(2, "0")}${period.toLowerCase()}`;
   };
 
   const estimatedFinishDate = useMemo(() => {
@@ -140,23 +168,15 @@ function Dashboard({
       const day = current.getDay();
 
       const isWeekend = day === 0 || day === 6;
-      const isHoliday = holidays[key]; // ✅ check your fetched holidays map
+      const isHoliday = holidays[key];
 
-      if (isWeekend || isHoliday) continue; // skip these days
+      if (isWeekend || isHoliday) continue;
 
       remaining -= avgHours;
     }
 
     return new Date(current);
   }, [entries, avgHours, remainingHours, holidays]);
-
-  const formatTime = (time) => {
-    if (!time) return "--";
-    const [h, m] = time.split(":").map(Number);
-    const period = h >= 12 ? "PM" : "AM";
-    const hour12 = h % 12 || 12;
-    return `${hour12}:${String(m).padStart(2, "0")}${period.toLowerCase()}`;
-  };
 
   /* ================= MONTHLY ================= */
   const monthlyData = useMemo(() => {
@@ -344,7 +364,10 @@ function Dashboard({
     <div className="min-h-screen text-white space-y-6">
       {/* HEADER */}
       <div>
-        <h2 className="text-3xl font-bold text-white">OJT Dashboard</h2>
+        <h2 className="text-3xl font-bold text-white flex items-center gap-2">
+          <FiHome />
+          OJT Dashboard
+        </h2>
         <p className="text-gray-400 text-sm mt-1">
           Track your internship journey
         </p>
@@ -733,8 +756,8 @@ function Dashboard({
           </ResponsiveContainer>
 
           {/* BOTTOM INSIGHTS */}
-          <div className="mt-4 flex justify-between items-center">
-            <span className="text-[11px] text-indigo-200/70">
+          <div className="mt-4 flex justify-between items-center text-[11px]">
+            <span className="text-indigo-200/70">
               Total logged:{" "}
               {monthlyData.reduce((sum, m) => sum + m.hours, 0).toFixed(1)} hrs
             </span>

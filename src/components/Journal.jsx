@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import JournalForm from "./JournalForm";
 import JournalList from "./JournalList";
 import EntryPage from "./EntryPage";
+import { FiBook } from "react-icons/fi";
 import { Plus } from "lucide-react";
 import "../styles/FireButton.css";
 import { motion } from "framer-motion";
@@ -54,7 +55,10 @@ function Journal({
   return (
     <div className="space-y-6 pb-28 relative">
       <div>
-        <h2 className="text-3xl font-bold text-white">Journal</h2>
+        <h2 className="text-3xl font-bold text-white flex items-center gap-2">
+          <FiBook />
+          Journal
+        </h2>
         <p className="text-gray-400 text-sm mt-1">
           Start and manage your daily internship logs
         </p>

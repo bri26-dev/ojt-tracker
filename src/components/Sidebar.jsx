@@ -1,11 +1,12 @@
 import { useRef, useEffect, useState } from "react";
-import { FiHome, FiCalendar, FiBook } from "react-icons/fi";
+import { FiHome, FiCalendar, FiBook, FiSettings } from "react-icons/fi";
 
 function Sidebar({ activePage, setActivePage }) {
   const items = [
     { key: "dashboard", label: "Dashboard", icon: FiHome, color: "cyan" },
     { key: "calendar", label: "Calendar", icon: FiCalendar, color: "blue" },
     { key: "journal", label: "Journal", icon: FiBook, color: "violet" },
+    { key: "settings", label: "Settings", icon: FiSettings, color: "orange" },
   ];
 
   const [indicatorStyle, setIndicatorStyle] = useState({});
@@ -48,6 +49,7 @@ function NavButton({ icon: Icon, label, active, onClick, color, innerRef }) {
     cyan: "rgba(34,211,238,0.5)",
     blue: "rgba(59,130,246,0.5)",
     violet: "rgba(139,92,246,0.5)",
+    orange: "rgba(249,115,22,0.5)",
   };
 
   const glow = colorGlow[color];

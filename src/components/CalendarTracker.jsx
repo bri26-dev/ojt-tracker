@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { FiCalendar } from "react-icons/fi";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { calculateHours } from "../utils/calculateHours";
 
@@ -99,7 +100,10 @@ function CalendarTracker({ entries }) {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-white">Calendar</h2>
+      <h2 className="text-3xl font-bold text-white flex items-center gap-2">
+        <FiCalendar />
+        Calendar
+      </h2>
       <p className="text-gray-400 text-sm mt-1">Monitor your daily logs</p>
 
       <div className="bg-neutral-900 p-5 rounded-xl mt-4">
