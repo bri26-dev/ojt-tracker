@@ -652,11 +652,9 @@ function Dashboard({
           </p>
         </div>
 
-        {/* 📊 MONTHLY / WEEKLY BAR GRAPH */}
         {/* 📊 MONTHLY ACTIVITY */}
         <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500/10 to-violet-500/10 border border-indigo-500/30 rounded-2xl p-4 shadow-[0_0_25px_rgba(99,102,241,0.16)]">
           <div className="absolute -top-6 -right-6 w-24 h-24 bg-indigo-400/20 blur-3xl rounded-full animate-pulse" />
-
           {/* HEADER */}
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -667,7 +665,6 @@ function Dashboard({
             </div>
             <div className="text-lg">📊</div>
           </div>
-
           {/* TOP META */}
           <div className="grid grid-cols-3 gap-2 mb-4">
             <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-2 text-center">
@@ -698,10 +695,13 @@ function Dashboard({
               </p>
             </div>
           </div>
-
           {/* CHART */}
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={monthlyData}>
+            <BarChart
+              data={monthlyData}
+              margin={{ top: 10, right: 10, left: 10, bottom: 0 }} // small left margin
+            >
+              {/* Gradient */}
               <defs>
                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#818cf8" />
@@ -709,33 +709,31 @@ function Dashboard({
                 </linearGradient>
               </defs>
 
+              {/* Grid */}
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="#262626"
                 vertical={false}
               />
 
+              {/* X Axis */}
               <XAxis
                 dataKey="name"
                 tick={{ fill: "#9ca3af", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
+                padding={{ left: 10, right: 10 }}
               />
 
-              {/* ✅ Add YAxis */}
+              {/* Y Axis */}
               <YAxis
                 tick={{ fill: "#9ca3af", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                label={{
-                  value: "Hours",
-                  angle: -90,
-                  position: "insideLeft",
-                  fill: "#9ca3af",
-                  fontSize: 12,
-                }}
+                width={30} // reserve space for numbers
               />
 
+              {/* Tooltip */}
               <Tooltip
                 cursor={{ fill: "rgba(99,102,241,0.08)" }}
                 contentStyle={{
@@ -746,15 +744,15 @@ function Dashboard({
                 formatter={(value) => [`${value} hrs`, "Hours"]}
               />
 
+              {/* Bars */}
               <Bar
                 dataKey="hours"
-                radius={[0, 0, 0, 0]}
-                fill="url(#barGradient)"
                 barSize={22}
+                radius={[4, 4, 0, 0]} // rounded top corners
+                fill="url(#barGradient)"
               />
             </BarChart>
           </ResponsiveContainer>
-
           {/* BOTTOM INSIGHTS */}
           <div className="mt-4 flex justify-between items-center text-[11px]">
             <span className="text-indigo-200/70">
